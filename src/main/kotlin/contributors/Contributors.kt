@@ -30,7 +30,7 @@ interface Contributors: CoroutineScope {
     val job: Job
 
     override val coroutineContext: CoroutineContext
-        get() = job + Dispatchers.Main
+        get() = job + Dispatchers.IO
 
     fun init() {
         // Start a new loading on 'load' click
@@ -47,7 +47,7 @@ interface Contributors: CoroutineScope {
         }
 
         // Load stored params (user & password values)
-        loadInitialParams()
+//        loadInitialParams()
     }
 
     fun loadContributors() {
@@ -120,7 +120,7 @@ interface Contributors: CoroutineScope {
             }*/
                 launch(Dispatchers.Default) {
                     loadVideosChannels(vimeoService,start..end) { videos, completed ->
-                        withContext(Dispatchers.Main) {
+                        withContext(Dispatchers.IO) {
                             updateResults(videos, startTime, completed)
                         }
                     }
@@ -153,16 +153,21 @@ interface Contributors: CoroutineScope {
      videos: List<Video>,
      startTime: Long,
      completed: Boolean = true,
-     outputFile: Path = File("Results.txt").toPath()
  ) {
-        updateVideos(videos)
-        updateLoadingStatus(if (completed) COMPLETED else IN_PROGRESS, startTime)
-        if (completed) {
-            setActionsStatus(newLoadingEnabled = true)
-        }
-outputFile.appendLinesToFile(videos.minus(setOfVideos).map{it.title})
-     setOfVideos.addAll(videos)
+     val filtered = videos.filter { it.title.matchesVideoConstraint() }
+     updateVideos(filtered)
+     updateLoadingStatus(if (completed) COMPLETED else IN_PROGRESS, startTime)
+     if (completed) {
+         setActionsStatus(newLoadingEnabled = true)
+     }
+     setOfVideos.apply {
+         addAll(filtered)
+     }
  }
+    fun writeVideosToFile(){
+        val outputFile = File("Results.txt").apply{createNewFile()}.toPath()
+        outputFile.writeLinesToFile(setOfVideos.map { "$baseUrl${it.id}" })
+    }
     // append lines of text
     @Throws(IOException::class)
     fun Path.appendLinesToFile(list: List<String>) {
@@ -170,6 +175,14 @@ outputFile.appendLinesToFile(videos.minus(setOfVideos).map{it.title})
             this, list,
             StandardOpenOption.CREATE,
             StandardOpenOption.APPEND
+        )
+    }
+    // rewrite text
+    @Throws(IOException::class)
+    fun Path.writeLinesToFile(list: List<String>) {
+        Files.write(
+            this, list,
+            StandardOpenOption.CREATE,
         )
     }
     private fun updateLoadingStatus(

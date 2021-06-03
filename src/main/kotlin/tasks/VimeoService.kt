@@ -1,20 +1,14 @@
 package contributors
 
-import com.jakewharton.retrofit2.converter.kotlinx.serialization.asConverterFactory
 import kotlinx.serialization.ExperimentalSerializationApi
-import kotlinx.serialization.Serializable
-import kotlinx.serialization.json.Json
-import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
 import okhttp3.ResponseBody
-import retrofit2.Call
-import retrofit2.Converter
 import retrofit2.Response
 import retrofit2.Retrofit
 import retrofit2.adapter.rxjava2.RxJava2CallAdapterFactory
 import retrofit2.http.GET
 import retrofit2.http.Path
-import java.util.Base64
+val baseUrl = "https://player.vimeo.com/video/"
 
 interface VimeoService {
     @GET("{id}")
@@ -23,7 +17,6 @@ interface VimeoService {
     ): Response<ResponseBody>
 }
 
-@Serializable
 data class Video(
     val id: Int,
     val title: String
@@ -41,7 +34,7 @@ fun createVimeoService(): VimeoService {
         .build()
 
     val retrofit = Retrofit.Builder()
-        .baseUrl("https://player.vimeo.com/video/")
+        .baseUrl(baseUrl)
         .addCallAdapterFactory(RxJava2CallAdapterFactory.create())
         .client(httpClient)
         .build()

@@ -34,7 +34,6 @@ private fun <T> retrofit2.Response<T>.parseVideo(id: Int): Video {
         return Video(0,"")
     }
     val string = body.string()
-    println("Response recieved: $string")
     return Video(id, string.substringBetween("<title>", "</title>"))
 }
 

@@ -12,7 +12,7 @@ import javax.swing.*
 import javax.swing.table.DefaultTableModel
 
 private val INSETS = Insets(3, 10, 3, 10)
-private val COLUMNS = arrayOf("Login", "Contributions")
+private val COLUMNS = arrayOf("ID", "Title")
 
 @Suppress("CONFLICTING_INHERITED_JVM_DECLARATIONS")
 class ContributorsUI : JFrame("Vimeo videos"), Contributors {
@@ -22,8 +22,9 @@ class ContributorsUI : JFrame("Vimeo videos"), Contributors {
     private val start = JTextField(20)
     private val end = JTextField(20)
     private val variant = JComboBox(Variant.values())
-    private val load = JButton("Load contributors")
+    private val load = JButton("Run")
     private val cancel = JButton("Cancel").apply { isEnabled = false }
+    private val export = JButton("Export")
 
     private val resultsModel = DefaultTableModel(COLUMNS, 0)
     private val results = JTable(resultsModel)
@@ -45,6 +46,7 @@ class ContributorsUI : JFrame("Vimeo videos"), Contributors {
                 break
             }
         }
+        export.addActionListener { writeVideosToFile() }
         rootPane.contentPane = JPanel(GridBagLayout()).apply {
             addLabeled("Start", start)
             addLabeled("End", end)
@@ -53,6 +55,7 @@ class ContributorsUI : JFrame("Vimeo videos"), Contributors {
             addWide(JPanel().apply {
                 add(load)
                 add(cancel)
+                add(export)
             })
             addWide(resultsScroll) {
                 weightx = 1.0
@@ -80,15 +83,14 @@ class ContributorsUI : JFrame("Vimeo videos"), Contributors {
         }.toTypedArray(), COLUMNS)
     }
     override fun updateVideos(videos: List<Video>) {
-        if (videos.isNotEmpty()) {
-            log.info("Updating result with ${videos.size} rows")
+        val toTypedArray = videos.map { arrayOf(it.id, it.title) }.toTypedArray()
+        if (toTypedArray.isNotEmpty()) {
+            log.info("Updating result with ${toTypedArray.size} rows")
         }
         else {
             log.info("Clearing result")
         }
-        resultsModel.setDataVector(videos.map {
-            arrayOf(it.id, it.title)
-        }.toTypedArray(), COLUMNS)
+        resultsModel.setDataVector(toTypedArray, COLUMNS)
     }
 
     override fun setLoadingStatus(text: String, iconRunning: Boolean) {
@@ -119,6 +121,7 @@ class ContributorsUI : JFrame("Vimeo videos"), Contributors {
     override fun setActionsStatus(newLoadingEnabled: Boolean, cancellationEnabled: Boolean) {
         load.isEnabled = newLoadingEnabled
         cancel.isEnabled = cancellationEnabled
+        export.isEnabled = cancellationEnabled
     }
 
     override fun setParams(params: Params) {
@@ -135,6 +138,10 @@ class ContributorsUI : JFrame("Vimeo videos"), Contributors {
     override fun getStartAndEnd(): Pair<Int, Int> {
         return Pair(start.text.toInt(), end.text.toInt())
     }
+}
+
+fun String.matchesVideoConstraint(): Boolean {
+    return contains("greenius", ignoreCase = true)
 }
 
 fun JPanel.addLabeled(label: String, component: JComponent) {

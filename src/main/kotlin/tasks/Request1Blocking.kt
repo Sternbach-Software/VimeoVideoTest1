@@ -9,13 +9,21 @@ import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.StandardOpenOption
 
-val outputSynch = File("ResultsSynchronous.txt").toPath()
+val outputSynch = File("ResultsSynchronous.txt").apply{createNewFile()}.toPath()
 fun loadVideosURL(ids: IntRange): List<Video> {
     val list = mutableListOf<Video>()
     for (id in ids) {
         try {
-            val html = URL("https://player.vimeo.com/video/$id").readText()
-            list.add(Video(id, html.substringBetween("<title>", "</title>")).also{println("Video: $it");outputSynch.appendLinesToFile(listOf(it.title))})
+            val html = URL("$baseUrl$id").readText()
+            list.add(
+                Video(
+                    id,
+                    html.substringBetween("<title>", "</title>")
+                ).also {
+                    println("Video: $it")
+                    outputSynch.appendLinesToFile(listOf("$baseUrl${it.id}"))
+                }
+            )
         } catch (t: Throwable){}
     }
     return list
