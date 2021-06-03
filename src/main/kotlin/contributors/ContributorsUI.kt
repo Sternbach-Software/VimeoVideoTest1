@@ -16,6 +16,7 @@ private val COLUMNS = arrayOf("ID", "Title")
 
 @Suppress("CONFLICTING_INHERITED_JVM_DECLARATIONS")
 class ContributorsUI : JFrame("Vimeo videos"), Contributors {
+    override var counter: Int = 0
     private val username = JTextField(20)
     private val password = JPasswordField(20)
     private val org = JTextField(20)
@@ -24,7 +25,7 @@ class ContributorsUI : JFrame("Vimeo videos"), Contributors {
     private val variant = JComboBox(Variant.values())
     private val load = JButton("Run")
     private val cancel = JButton("Cancel").apply { isEnabled = false }
-    private val export = JButton("Export")
+    private val export = JButton("Export").apply { isEnabled = false }
 
     private val resultsModel = DefaultTableModel(COLUMNS, 0)
     private val results = JTable(resultsModel)
@@ -76,7 +77,7 @@ class ContributorsUI : JFrame("Vimeo videos"), Contributors {
             log.info("Updating result with ${users.size} rows")
         }
         else {
-            log.info("Clearing result")
+//            log.info("Clearing result")
         }
         resultsModel.setDataVector(users.map {
             arrayOf(it.login, it.contributions)
@@ -85,10 +86,10 @@ class ContributorsUI : JFrame("Vimeo videos"), Contributors {
     override fun updateVideos(videos: List<Video>) {
         val toTypedArray = videos.map { arrayOf(it.id, it.title) }.toTypedArray()
         if (toTypedArray.isNotEmpty()) {
-            log.info("Updating result with ${toTypedArray.size} rows")
+//            log.info("Updating result with ${toTypedArray.size} rows")
         }
         else {
-            log.info("Clearing result")
+//            log.info("Clearing result")
         }
         resultsModel.setDataVector(toTypedArray, COLUMNS)
     }

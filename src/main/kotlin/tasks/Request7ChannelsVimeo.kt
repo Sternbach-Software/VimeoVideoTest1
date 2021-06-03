@@ -23,16 +23,15 @@ suspend fun loadVideosChannels(
     repeat(ids.last) {
         val video = channel.receive()
         allVideos.add(video)
-        updateResults(allVideos, it == ids.last)
+        updateResults(allVideos, it == ids.last -1)
     }
 }
 
 private fun <T> retrofit2.Response<T>.parseVideo(id: Int): Video {
+    println("Video processed:     $id")
     val body = body() as ResponseBody?
-    if(body == null) {
-        println("Body was null.")
+        ?: //        println("Body was null.")
         return Video(0,"")
-    }
     val string = body.string()
     return Video(id, string.substringBetween("<title>", "</title>"))
 }

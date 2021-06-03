@@ -156,7 +156,8 @@ interface Contributors: CoroutineScope {
  ) {
      val filtered = videos.filter { it.title.matchesVideoConstraint() }
      updateVideos(filtered)
-     updateLoadingStatus(if (completed) COMPLETED else IN_PROGRESS, startTime)
+     updateLoadingStatus(if (completed) COMPLETED else IN_PROGRESS, startTime, videos.size)
+     println()
      if (completed) {
          setActionsStatus(newLoadingEnabled = true)
      }
@@ -185,12 +186,19 @@ interface Contributors: CoroutineScope {
             StandardOpenOption.CREATE,
         )
     }
+    var counter: Int
+        get() = 0
+        set(value) = TODO()
+
     private fun updateLoadingStatus(
         status: LoadingStatus,
-        startTime: Long? = null
+        startTime: Long? = null,
+        videoSize: Int? = null
     ) {
         val time = if (startTime != null) {
-            val time = System.currentTimeMillis() - startTime
+            val time = (System.currentTimeMillis() - startTime).also{elapsed->
+                videoSize?.let{/*if(counter++ % 10 == 0)*/ print("Speed:                       ${it.toLong()/(elapsed / 1000)} videos/sec")}
+            }
             "${(time / 1000)}.${time % 1000 / 100} sec"
         } else ""
 
