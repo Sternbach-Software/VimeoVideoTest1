@@ -1,7 +1,6 @@
 package contributors
 
 import contributors.Contributors.LoadingStatus.*
-import contributors.Variant.*
 import kotlinx.coroutines.*
 import tasks.*
 import java.awt.event.ActionListener
@@ -23,7 +22,6 @@ enum class Variant {
 //    PROGRESS,         // Request6Progress
 ASYNCHRONOUS          // Request7Channels
 }
-enum class ShmulyVarient{SYNCHRONOUS, ASYCNCHRONOUS}
 val setOfVideos = mutableSetOf<Video>()
 interface Contributors: CoroutineScope {
 
@@ -35,14 +33,14 @@ interface Contributors: CoroutineScope {
     fun init() {
         // Start a new loading on 'load' click
         addLoadListener {
-            saveParams()
-            loadContributors()
+//            saveParams()
+            loadVideos()
         }
 
         // Save preferences and exit on closing the window
         addOnWindowClosingListener {
             job.cancel()
-            saveParams()
+//            saveParams()
             System.exit(0)
         }
 
@@ -50,83 +48,16 @@ interface Contributors: CoroutineScope {
 //        loadInitialParams()
     }
 
-    fun loadContributors() {
-        val (username, password, org, _) = getParams()
-        val req = RequestData(username, password, org)
-        val (start, end) = getStartAndEnd()
-        clearResults()
-        val service = createGitHubService(req.username, req.password)
+    fun loadVideos(start: Int = getStartAndEnd().first, end: Int = getStartAndEnd().second) {
         val vimeoService = createVimeoService()
-
         val startTime = System.currentTimeMillis()
-        when (getSelectedVariant()) {
-            SYNCHRONOUS -> {
-                val videos = loadVideosURL(start..end)
-                updateResults(videos, startTime)
-            }
-           /* BLOCKING -> { // Blocking UI thread
-                val users = loadContributorsBlocking(service, req)
-                updateResults(users, startTime)
-            }
-            BACKGROUND -> { // Blocking a background thread
-                loadContributorsBackground(service, req) { users ->
-                    SwingUtilities.invokeLater {
-                        updateResults(users, startTime)
-                    }
+        launch(Dispatchers.Default) {
+            loadVideosChannels(vimeoService, start..end) { video, completed ->
+                withContext(Dispatchers.IO) {
+                    updateResults(video, startTime, completed)
                 }
             }
-            CALLBACKS -> { // Using callbacks
-                loadContributorsCallbacks(service, req) { users ->
-                    SwingUtilities.invokeLater {
-                        updateResults(users, startTime)
-                    }
-                }
-            }
-            SUSPEND -> { // Using coroutines
-                launch {
-                    val users = loadContributorsSuspend(service, req)
-                    updateResults(users, startTime)
-                }.setUpCancellation()
-            }
-            CONCURRENT -> { // Performing requests concurrently
-                launch {
-                    val users = loadContributorsConcurrent(service, req)
-                    updateResults(users, startTime)
-                }.setUpCancellation()
-            }
-            NOT_CANCELLABLE -> { // Performing requests in a non-cancellable way
-                launch {
-                    val users = loadContributorsNotCancellable(service, req)
-                    updateResults(users, startTime)
-                }.setUpCancellation()
-            }
-            PROGRESS -> { // Showing progress
-                launch(Dispatchers.Default) {
-                    loadContributorsProgress(service, req) { users, completed ->
-                        withContext(Dispatchers.Main) {
-                            updateResults(users, startTime, completed)
-                        }
-                    }
-                }.setUpCancellation()
-            }*/
-            ASYNCHRONOUS -> {  // Performing requests concurrently and showing progress
-              /*  launch(Dispatchers.Default) {
-                    loadContributorsChannels(service, req) { users, completed ->
-                        withContext(Dispatchers.Main) {
-                            updateResults(users, startTime, completed)
-                        }
-                    }
-                }.setUpCancellation()
-            }*/
-                launch(Dispatchers.Default) {
-                    loadVideosChannels(vimeoService,start..end) { videos, completed ->
-                        withContext(Dispatchers.IO) {
-                            updateResults(videos, startTime, completed)
-                        }
-                    }
-                }.setUpCancellation()
-            }
-        }
+        }.setUpCancellation()
     }
 
     private enum class LoadingStatus { COMPLETED, CANCELED, IN_PROGRESS }
@@ -137,32 +68,19 @@ interface Contributors: CoroutineScope {
         setActionsStatus(newLoadingEnabled = false)
     }
 
-    private fun updateResults(
-        users: List<User>,
-        startTime: Long,
-        completed: Boolean = true
-    ) {
-        updateContributors(users)
-        updateLoadingStatus(if (completed) COMPLETED else IN_PROGRESS, startTime)
-        if (completed) {
-            setActionsStatus(newLoadingEnabled = true)
-        }
-    }
  @JvmName("updateResults1")
  private fun updateResults(
-     videos: List<Video>,
+     video: Video,
      startTime: Long,
      completed: Boolean = true,
  ) {
-     val filtered = videos.filter { it.title.matchesVideoConstraint() }
-     updateVideos(filtered)
-     updateLoadingStatus(if (completed) COMPLETED else IN_PROGRESS, startTime, videos.size)
-     println()
+     if(video.title.matchesVideoConstraint()){
+         setOfVideos.add(video)
+         updateVideos(video)
+         updateLoadingStatus(if (completed) COMPLETED else IN_PROGRESS, startTime)
+     }
      if (completed) {
          setActionsStatus(newLoadingEnabled = true)
-     }
-     setOfVideos.apply {
-         addAll(filtered)
      }
  }
     fun writeVideosToFile(){
@@ -186,18 +104,13 @@ interface Contributors: CoroutineScope {
             StandardOpenOption.CREATE,
         )
     }
-    var counter: Int
-        get() = 0
-        set(value) = TODO()
-
     private fun updateLoadingStatus(
         status: LoadingStatus,
         startTime: Long? = null,
-        videoSize: Int? = null
     ) {
         val time = if (startTime != null) {
             val time = (System.currentTimeMillis() - startTime).also{elapsed->
-                videoSize?.let{/*if(counter++ % 10 == 0)*/ print("Speed:                       ${it.toLong()/(elapsed / 1000)} videos/sec")}
+                print("Speed:                       ${counter++/(elapsed / 1000.0)} videos/sec")
             }
             "${(time / 1000)}.${time % 1000 / 100} sec"
         } else ""
@@ -238,6 +151,23 @@ interface Contributors: CoroutineScope {
         }
     }
 
+    var counter: Int
+        get() = 0
+        set(value) = TODO()
+
+
+    private fun updateResults(
+        users: List<User>,
+        startTime: Long,
+        completed: Boolean = true
+    ) {
+        updateContributors(users)
+        updateLoadingStatus(if (completed) COMPLETED else IN_PROGRESS, startTime)
+        if (completed) {
+            setActionsStatus(newLoadingEnabled = true)
+        }
+    }
+
     fun loadInitialParams() {
         setParams(loadStoredParams())
     }
@@ -256,7 +186,6 @@ interface Contributors: CoroutineScope {
 
     fun updateContributors(users: List<User>)
 
-    fun updateVideos(users: List<Video>){}
 
     fun setLoadingStatus(text: String, iconRunning: Boolean)
 
@@ -273,6 +202,8 @@ interface Contributors: CoroutineScope {
     fun setParams(params: Params)
 
     fun getParams(): Params
+
+    fun updateVideos(users: Video){}
 
     fun getStartAndEnd():Pair<Int,Int>{return Pair(1,1)}
 }

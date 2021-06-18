@@ -25,7 +25,7 @@ class ContributorsUI : JFrame("Vimeo videos"), Contributors {
     private val variant = JComboBox(Variant.values())
     private val load = JButton("Run")
     private val cancel = JButton("Cancel").apply { isEnabled = false }
-    private val export = JButton("Export").apply { isEnabled = false }
+    private val export = JButton("Export")
 
     private val resultsModel = DefaultTableModel(COLUMNS, 0)
     private val results = JTable(resultsModel)
@@ -83,16 +83,8 @@ class ContributorsUI : JFrame("Vimeo videos"), Contributors {
             arrayOf(it.login, it.contributions)
         }.toTypedArray(), COLUMNS)
     }
-    override fun updateVideos(videos: List<Video>) {
-        val toTypedArray = videos.map { arrayOf(it.id, it.title) }.toTypedArray()
-        if (toTypedArray.isNotEmpty()) {
-//            log.info("Updating result with ${toTypedArray.size} rows")
-        }
-        else {
-//            log.info("Clearing result")
-        }
-        resultsModel.setDataVector(toTypedArray, COLUMNS)
-    }
+    override fun updateVideos(video: Video) = resultsModel.addRow(arrayOf(video.id, video.title))
+
 
     override fun setLoadingStatus(text: String, iconRunning: Boolean) {
         loadingStatus.text = text
@@ -122,7 +114,6 @@ class ContributorsUI : JFrame("Vimeo videos"), Contributors {
     override fun setActionsStatus(newLoadingEnabled: Boolean, cancellationEnabled: Boolean) {
         load.isEnabled = newLoadingEnabled
         cancel.isEnabled = cancellationEnabled
-        export.isEnabled = cancellationEnabled
     }
 
     override fun setParams(params: Params) {

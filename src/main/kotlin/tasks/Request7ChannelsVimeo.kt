@@ -10,7 +10,7 @@ import okhttp3.ResponseBody
 suspend fun loadVideosChannels(
     service: VimeoService,
     ids: IntRange,
-    updateResults: suspend (List<Video>, completed: Boolean) -> Unit
+    updateResults: suspend (Video, completed: Boolean) -> Unit
 ) = coroutineScope {
    val channel = Channel<Video>()
     for (id in ids) {
@@ -18,14 +18,13 @@ suspend fun loadVideosChannels(
             val user = service.getVideo(id).parseVideo(id)
             channel.send(user)
         }
+        println("Coroutine made: $id")
     }
-    val allVideos = mutableListOf<Video>()
     repeat(ids.last) {
-        val video = channel.receive()
-        allVideos.add(video)
-        updateResults(allVideos, it == ids.last -1)
+        updateResults(channel.receive(), it == ids.last -1)
     }
 }
+
 
 private fun <T> retrofit2.Response<T>.parseVideo(id: Int): Video {
     println("Video processed:     $id")

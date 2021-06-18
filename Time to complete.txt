@@ -1,3 +1,5 @@
 5.9 sec to complete
 15.6 sec to complete
 1.6 sec to complete
+2.6 sec to complete
+21.3 sec to complete

@@ -22,7 +22,6 @@ data class Video(
     val title: String
 )
 
-@OptIn(ExperimentalSerializationApi::class)
 fun createVimeoService(): VimeoService {
     val httpClient = OkHttpClient.Builder()
         .addInterceptor { chain ->
