@@ -71,6 +71,7 @@ class Min : JFrame(), CoroutineScope {
     fun videoFound(video: Video){
         numFound++
         outputFile.appendText("$baseUrl${video.id}\n")
+        println("Video found: $video")
     }
     private fun Job.setUpCancellation() {
         val loadingJob = this
