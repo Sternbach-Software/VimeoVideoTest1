@@ -35,7 +35,7 @@ class Min : JFrame(), CoroutineScope {
         get() = job + Dispatchers.IO
 
     val outputFile = File("Results.txt").apply{createNewFile()}.toPath()
-    val startTime = System.currentTimeMillis()
+    var startTime = System.currentTimeMillis()
     var startNumInt = 0
     var endNumInt = 0
     var numProcessed = 0
@@ -43,29 +43,52 @@ class Min : JFrame(), CoroutineScope {
     var totalVidsToProcess = 0
     var counter = 1
     val chunkSizeInt by lazy { maxNumCoroutines!!.text.toString().toInt() / numInstances!!.text.toString().toInt() }
-
+    fun <T, R> T.println(message: (T) -> R) = this.apply { println(message(this)) }
     fun startSearch(){
-        totalVidsToProcess = endNum!!.text.toString().toInt().apply{startNumInt = this} - startNum!!.text.toString().toInt().apply{endNumInt = this}
+        var counter1 = 0
+        totalVidsToProcess =
+            endNum!!
+                .text.println{"Counter: ${counter1++}"}
+                .toString().println{"Counter: ${counter1++}"}
+                .toInt().println{"Counter: ${counter1++}"}
+                .apply{endNumInt = this} - startNum!!.println{"Counter: ${counter1++}"}
+                .text.println{"Counter: ${counter1++}"}
+                .toString().println{"Counter: ${counter1++}"}
+                .toInt().println{"Counter: ${counter1++}"}
+                .apply{startNumInt = this}.println{"Counter: ${counter1++}"}
         jProgressBar1!!.maximum = totalVidsToProcess
+        counter = startNumInt
+        println("startNum: $startNumInt, endNum: $endNumInt, totalVids: $totalVidsToProcess")
         repeat(numInstances!!.text.toInt()) {
-            createNewInstance()
+            println("New instance created")
+            startNewCalculation()
         }
     }
-    fun createNewInstance(){
-        if(counter < totalVidsToProcess){
+    fun startNewCalculation(){
+        println("Counter is less than total vids to process: ${counter < endNumInt}")
+        if(counter < endNumInt){
             var endNumber = counter + chunkSizeInt - 1
-            if(endNumber > totalVidsToProcess){
-                endNumber = totalVidsToProcess //don't go over
+            if(endNumber > endNumInt){
+                endNumber = endNumInt //don't go over
             }
             loadVideos(counter, endNumber)
             counter = endNumber + 1
         }
     }
+    fun clearResults(){
+        numProcessed = 0
+        jProgressBar1!!.value = 0
+        totalVidsToProcess = 0
+        startTime = System.currentTimeMillis()
+        vidsDone!!.text = "0 (found: 0)"
+        vidPerSec!!.text = "0.0"
+        percentDone!!.text = "0%"
+    }
     fun updateVideos(){
         numProcessed++
         jProgressBar1!!.value++
         vidsDone!!.text = "$numProcessed (found: $numFound)"
-        vidPerSec!!.text = (numProcessed/(System.currentTimeMillis() - startTime) / 1000.0).toString()
+        vidPerSec!!.text = (numProcessed/((System.currentTimeMillis() - startTime) / 1000.0)).toString()
         percentDone!!.text = "${(numProcessed/totalVidsToProcess)*100}%"
     }
     fun videoFound(video: Video){
@@ -94,7 +117,7 @@ class Min : JFrame(), CoroutineScope {
                     updateVideos()
                     if(video.title.matchesVideoConstraint()) videoFound(video)
                 }
-                if(completed) createNewInstance()
+                if(completed) startNewCalculation()
             }
         }.setUpCancellation()
     }
@@ -113,7 +136,7 @@ class Min : JFrame(), CoroutineScope {
         endNum = JTextField()
         numInstances = JTextField()
         jLabel1 = JLabel()
-        maxNumCoroutines = JTextField().apply{text = "hello"}
+        maxNumCoroutines = JTextField()
         jLabel2 = JLabel()
         jLabel3 = JLabel()
         jLabel4 = JLabel()
@@ -127,6 +150,9 @@ class Min : JFrame(), CoroutineScope {
         startJButton!!.text = "Start"
         startJButton!!.addActionListener {
             //480316303
+            println("start button clicked")
+            cancelJButton!!.doClick()
+            clearResults()
             startSearch()
         }
         cancelJButton!!.text = "Cancel"

@@ -12,6 +12,7 @@ suspend fun loadVideosChannels(
     ids: IntRange,
     updateResults: suspend (Video, completed: Boolean) -> Unit
 ) = coroutineScope {
+    val size = ids.last - ids.first
    val channel = Channel<Video>()
     for (id in ids) {
         launch {
@@ -20,8 +21,9 @@ suspend fun loadVideosChannels(
         }
         println("Coroutine made: $id")
     }
-    repeat(ids.last) {
-        updateResults(channel.receive(), it == ids.last -1)
+    repeat(size) {
+        println("Is completed: ${it == size - 1}")
+        updateResults(channel.receive(), it == size - 1)
     }
 }
 
