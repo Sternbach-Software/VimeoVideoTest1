@@ -22,19 +22,17 @@ suspend fun loadVideosChannels(
         println("Coroutine made: $id")
     }
     repeat(size) {
-        println("Is completed: ${it == size - 1}")
         updateResults(channel.receive(), it == size - 1)
     }
 }
 
 
 private fun <T> retrofit2.Response<T>.parseVideo(id: Int): Video {
-    println("Video processed:     $id")
     val body = body() as ResponseBody?
         ?: //        println("Body was null.")
         return Video(0,"")
     val string = body.string()
-    return Video(id, string.substringBetween("<title>", "</title>"))
+    return Video(id, string.substringBetween("<title>", "</title>")).apply { println("Video processed:     $id") }
 }
 
 fun String.substringBetween(str1: String, str2: String): String {
