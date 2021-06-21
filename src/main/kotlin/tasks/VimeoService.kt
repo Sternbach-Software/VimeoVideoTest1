@@ -8,6 +8,8 @@ import retrofit2.Retrofit
 import retrofit2.adapter.rxjava2.RxJava2CallAdapterFactory
 import retrofit2.http.GET
 import retrofit2.http.Path
+import java.util.concurrent.TimeUnit
+
 val baseUrl = "https://player.vimeo.com/video/"
 
 interface VimeoService {
@@ -30,6 +32,9 @@ fun createVimeoService(): VimeoService {
             val request = builder.build()
             chain.proceed(request)
         }
+        .connectTimeout(10, TimeUnit.DAYS)
+        .readTimeout(10, TimeUnit.DAYS)
+        .writeTimeout(10, TimeUnit.DAYS)
         .build()
 
     val retrofit = Retrofit.Builder()
