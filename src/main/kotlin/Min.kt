@@ -45,6 +45,7 @@ class Min : JFrame(), CoroutineScope {
     val chunkSizeInt by lazy { maxNumCoroutines!!.text.toString().toInt() / numInstances!!.text.toString().toInt() }
     fun <T, R> T.println(message: (T) -> R) = this.apply { println(message(this)) }
     fun startSearch(){
+        startTime = System.currentTimeMillis()
         totalVidsToProcess =
             endNum!!
                 .text
